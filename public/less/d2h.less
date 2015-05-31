@@ -13,6 +13,8 @@
   margin: 0 auto;
   text-align: left;
   width: 100%;
+  color: rgb(183, 183, 183);
+  background: #1E1E1E;
 }
 
 .d2h-file-wrapper {
@@ -61,11 +63,14 @@
   border-collapse: collapse;
   font-family: 'Source Code Pro';
   font-size: 12px;
-  height: 19px;
   width: 100%;
   tbody > tr > td {
     padding: 0px;
     border-spacing: 0px;
+    white-space: nowrap;
+  }
+  tbody > tr > td:last-child {
+    width: 100%;
   }
 }
 
@@ -89,7 +94,6 @@
   padding-left: 10px;
   padding-right: 10px;
   height: 19px;
-  margin-left: 80px;
 }
 
 .d2h-code-side-line {
@@ -97,93 +101,61 @@
   padding-left: 5px;
   padding-right: 5px;
   height: 19px;
-  margin-left: 50px;
 }
 
 .d2h-code-line del,
 .d2h-code-side-line del {
+  height: 19px;
   display: inline-block;
-  margin-top: -1px;
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 0, 0, 0.2);
 }
 
 .d2h-code-line ins,
 .d2h-code-side-line ins {
+  height: 19px;
   display: inline-block;
-  margin-top: -1px;
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(155, 185, 85, 0.2);
 }
 
 .line-num1 {
-  display: inline-block;
-  float: left;
   width: 30px;
-  overflow: hidden;
+  display: inline-block;
   text-overflow: ellipsis;
 }
 
 .line-num2 {
-  display: inline-block;
-  float: right;
   width: 30px;
-  overflow: hidden;
+  display: inline-block;
   text-overflow: ellipsis;
 }
 
-.d2h-code-linenumber {
-  position: absolute;
-  width: 2%;
-  min-width: 65px;
-  padding-left: 10px;
-  padding-right: 10px;
+.d2h-code-linenumber, .d2h-code-side-linenumber {
+  padding: 0 4px !important;
   height: 19px;
-  background-color: #fff;
-  color: rgba(0, 0, 0, 0.3);
+  background-color: #1E1E1E;
+  color: #5A5A5A;
   text-align: right;
-  border: solid #eeeeee;
-  border-width: 0 1px 0 1px;
+  border: solid #1A1A1A;
+  border-width: 0 1px 0 0;
   cursor: pointer;
-}
-
-.d2h-cntx {
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.d2h-code-side-linenumber, .d2h-code-linenumber {
-  position: absolute;
-  width: 52px;
-  text-align: center;
-  height: 19px;
-  background-color: rgba(114, 122, 131, 1);
-  color: rgba(0, 0, 0, 0.5);
-  border-width: 0 1px 0 1px;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  border-left: 1px solid rgba(0, 0, 0, 0.34);
-  border-right: 1px solid rgba(0, 0, 0, 0.34);
+  &.d2h-del {
+    color: #ccc;
+  }
+  &.d2h-ins {
+    color: #ccc;
+  }
 }
 
 .d2h-del {
-  background-color: #E86756;
-  color: #FFFFFF;
-
-  &.d2h-code-side-linenumber {
-    color: rgba(0, 0, 0, 0.5);
-  }
+  background-color: rgba(255, 0, 0, 0.2);
 }
 
 .d2h-ins {
-  background-color: #66F27B;
-  color: #000000;
-
-  &.d2h-code-side-linenumber {
-    color: rgba(0, 0, 0, 0.5);
-  }
+  background-color: rgba(155, 185, 85, 0.2);
 }
 
 .d2h-info {
-  color: rgba(255, 255, 255, 0.3);
+  opacity: .5;
 }

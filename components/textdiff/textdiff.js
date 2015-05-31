@@ -1,7 +1,9 @@
 
 var ko = require('knockout');
 var components = require('ungit-components');
+var _ = require('lodash');
 var diff2html = require('diff2html').Diff2Html;
+var hljs = require('highlight.js');
 
 components.register('textdiff', function(args) {
   return new TextDiffViewModel(args);
@@ -88,10 +90,34 @@ TextDiffViewModel.prototype.render = function() {
 
   this.loadMoreCount(Math.min(loadLimit, Math.max(0, lineCount - this.loadCount)));
 
+  var html;
   if (this.textDiffType() === 'sidebysidediff') {
-    this.diffHtml(diff2html.getPrettySideBySideHtmlFromJson(diffJsonCopy));
+    html = diff2html.getPrettySideBySideHtmlFromJson(diffJsonCopy);
   } else {
-    this.diffHtml(diff2html.getPrettyHtmlFromJson(diffJsonCopy));
+    html = diff2html.getPrettyHtmlFromJson(diffJsonCopy);
+  }
+
+  if (ungit.config.syntaxhighlight) {
+    var div = document.createElement('div');
+    div.innerHTML = html;
+    _.forEach(div.querySelectorAll('.d2h-code-line, .d2h-code-side-line'), function(line) {
+      line.classList.add('lang-' + diffJsonCopy[0].language);
+      var plusMinus = '';
+      if (line.classList.contains('d2h-del') || line.classList.contains('d2h-ins')) {
+        var text = line.firstChild.textContent;
+        plusMinus = text[0];
+        line.replaceChild(document.createTextNode(text.substring(1)), line.firstChild);
+      }
+
+      hljs.highlightBlock(line);
+
+      if (plusMinus) {
+        line.insertBefore(document.createTextNode(plusMinus), line.firstChild);
+      }
+    });
+    this.diffHtml(div.innerHTML);
+  } else {
+    this.diffHtml(html);
   }
 };
 

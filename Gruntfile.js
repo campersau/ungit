@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     less: {
       production: {
         files: {
-          "public/css/styles.css": ["public/less/styles.less", "public/vendor/css/animate.css", "public/less/d2h.less"],
+          "public/css/styles.css": ["public/less/styles.less", "public/vendor/css/animate.css", "public/less/d2h.less", "public/less/highlight.less"],
           "components/commit/commit.css": ["components/commit/commit.less"],
           "components/commitdiff/commitdiff.css": ["components/commitdiff/commitdiff.less"],
           "components/graph/graph.css": ["components/graph/graph.less"],
@@ -185,7 +185,7 @@ module.exports = function(grunt) {
     });
     b.add('./public/source/main.js');
     b.require('./public/source/main.js', { expose: 'ungit-main' });
-    
+
     b.require('./public/source/components.js', { expose: 'ungit-components' });
     b.require('./public/source/program-events.js', { expose: 'ungit-program-events' });
     b.require('./public/source/navigation.js', { expose: 'ungit-navigation' });
@@ -204,6 +204,7 @@ module.exports = function(grunt) {
     b.require('util', { expose: 'util' });
     b.require('path', { expose: 'path' });
     b.require('diff2html', { expose: 'diff2html' });
+    b.require('highlight.js', { expose: 'highlight.js' });
     var outFile = fs.createWriteStream('./public/js/ungit.js');
     outFile.on('close', function() {
       done();
