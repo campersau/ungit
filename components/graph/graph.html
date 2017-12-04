@@ -55,7 +55,7 @@
         </span>
         <!-- /ko -->
 
-        <!-- ko if: refs().length > 0 -->
+        <!-- ko if: refsToSearch().length > ungit.config.numRefsToShow -->
         <span class="newRef" data-bind="css: { editing: branchingFormVisible }">
           <button class="showSearchForm octicon octicon-search" data-bind="click: showRefSearchForm, visible: !refSearchFormVisible()"></button>
           <!-- ko if: refSearchFormVisible -->

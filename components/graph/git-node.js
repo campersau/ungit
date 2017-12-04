@@ -41,17 +41,20 @@ var GitNodeViewModel = function(graph, sha1) {
   this.branchesToDisplay = ko.observableArray();
   this.tags = ko.observableArray();
   this.tagsToDisplay = ko.observableArray();
+  this.refsToSearch = ko.observableArray();
   this.refs.subscribe((newValue) => {
     if (newValue) {
       this.branches(newValue.filter((r) => r.isBranch));
       this.tags(newValue.filter((r) => r.isTag));
       this.tagsToDisplay(this.tags.slice(0, maxTagsToDisplay));
       this.branchesToDisplay(this.branches.slice(0, ungit.config.numRefsToShow - this.tagsToDisplay().length));
+      this.refsToSearch(newValue.filter(ref => !ref.isHEAD));
     } else {
       this.branches.removeAll();
       this.tags.removeAll();
+      this.tagsToDisplay.removeAll();
       this.branchesToDisplay.removeAll();
-      this.tags.removeAll();
+      this.refsToSearch.removeAll();
     }
   });
   this.ancestorOfHEAD = ko.observable(false);
@@ -164,7 +167,7 @@ GitNodeViewModel.prototype.showRefSearchForm = function(obj, event) {
 
   const textBox = event.target.nextElementSibling.firstElementChild; // this may not be the best idea...
   $(textBox).autocomplete({
-    source: this.refs().filter(ref => !ref.isHEAD),
+    source: this.refsToSearch(),
     minLength: 0,
     select: function(event, ui) {
       const ref = ui.item;
