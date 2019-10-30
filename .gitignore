@@ -29,6 +29,7 @@ report/
 
 /clicktests/screenshots/
 /build
+/dist
 /*.dll
 /nw.exe
 /nw.pak

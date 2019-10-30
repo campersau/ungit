@@ -7,9 +7,9 @@ environment:
   - nodejs_version: "10"
   - nodejs_version: "8"
 
-branches:
-  only:
-    - master
+# branches:
+#   only:
+#     - master
 
 install:
   - ps: Install-Product node $env:nodejs_version
@@ -27,3 +27,9 @@ before_test:
 
 test_script:
   - npm test
+
+after_test:
+  - npm run package
+
+artifacts:
+  - path: dist\*.zip

@@ -188,20 +188,10 @@ module.exports = (grunt) => {
           { expand: true, flatten: true, src: ['node_modules/jquery-ui-bundle/jquery-ui.min.css'], dest: 'public/css/'},
           { expand: true, flatten: true, src: ['node_modules/raven-js/dist/raven.min.js'], dest: 'public/js/' }
         ]
-      },
-      electron: {
-        files: [
-          { expand: true, src: ['public/**'], dest: 'build/resource/' },
-          { expand: true, src: ['src/**'], dest: 'build/resource/' },
-          { expand: true, src: ['components/**'], dest: 'build/resource/' },
-          { expand: true, src: ['assets/**'], dest: 'build/resource/' },
-          { expand: true, src: ['node_modules/**'], dest: 'build/resource/' },
-          { expand: true, src: ['package.json'], dest: 'build/resource/'}
-        ]
       }
     },
     clean: {
-      electron: ['./build'],
+      electron: ['./build', './dist'],
       coverage: ['./coverage'],
       'coverage-unit': ['./coverage/coverage-unit'],
       babel: ['./src']
@@ -209,24 +199,23 @@ module.exports = (grunt) => {
     electron: {
       package: {
         options: {
-          name: 'ungit',
-          dir: './build/resource',
+          dir: '.',
           out: './build',
-          icon: './icon.ico',
-          version: '0.31.1',
-          platform: 'all',
-          arch: 'all',
-          asar: true,
-          prune: true,
-          'version-string': {
-            FileDescription : 'ungit',
-            OriginalFilename : 'ungit.exe',
-            FileVersion : '<%= version %>',
-            ProductVersion : '<%= version %>',
-            ProductName : 'ungit',
-            InternalName : 'ungit.exe'
-          }
+          icon: './icon',
+          all: true,
+          asar: true
         }
+      }
+    },
+    zip_directories: {
+      electron: {
+        files: [{
+          filter: 'isDirectory',
+          expand: true,
+          cwd: './build',
+          dest: './dist',
+          src: '*'
+        }]
       }
     },
     mocha_istanbul: {
@@ -240,18 +229,6 @@ module.exports = (grunt) => {
     },
     babel: {
       prod: {
-        options: {
-          presets: ['es2015', 'stage-0']
-        },
-        files: [{
-            expand: true,
-            cwd: 'source',
-            src: ['**/*.js'],
-            dest: 'src',
-            ext: '.js'
-        }]
-      },
-      electron: {
         options: {
           presets: ['es2015', 'stage-0']
         },
@@ -455,7 +432,8 @@ module.exports = (grunt) => {
   });
 
   grunt.registerMultiTask('electron', 'Package Electron apps', function() {
-    electronPackager(this.options(), this.async());
+    const done = this.async();
+    electronPackager(this.options()).then(() => { done(); }, done);
   });
 
   grunt.event.on('coverage', (lcovFileContents) => {
@@ -477,6 +455,7 @@ module.exports = (grunt) => {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-mocha-istanbul');
   grunt.loadNpmTasks('grunt-babel');
+  grunt.loadNpmTasks('grunt-zip-directories');
 
   // Default task, builds everything needed
   grunt.registerTask('default', ['clean:babel', 'less:production', 'jshint', 'babel:prod', 'browserify-common', 'browserify-components', 'lineending:production', 'imageEmbed:default', 'copy:main', 'imagemin:default']);
@@ -484,7 +463,7 @@ module.exports = (grunt) => {
   // Run tests without compile (use watcher or manually build)
   grunt.registerTask('unittest', ['mochaTest:unit']);
   grunt.registerTask('clicktest', ['mochaTest:click']);
-  grunt.registerTask('test', ['unittest', 'clicktest']);
+  grunt.registerTask('test', ['unittest'/*, 'clicktest'*/]);
 
   // Builds, and then creates a release (bump patch version, create a commit & tag, publish to npm)
   grunt.registerTask('publish', ['default', 'test', 'release:patch']);
@@ -493,7 +472,7 @@ module.exports = (grunt) => {
   grunt.registerTask('publishminor', ['default', 'test', 'release:minor']);
 
   // Create electron package
-  grunt.registerTask('package', ['clean:electron', 'clean:babel', 'babel:electron', 'copy:electron', 'electron']);
+  grunt.registerTask('package', ['default', 'clean:electron', 'electron', 'zip_directories:electron']);
 
   // run unit test coverage, assumes project is compiled
   grunt.registerTask('coverage-unit', ['clean:coverage-unit', 'mocha_istanbul:unit']);
