@@ -148,7 +148,10 @@ class Rebase extends ActionBase {
     let onto = this.graph.currentActionContext();
     if (!onto) return;
     if (onto instanceof RefViewModel) onto = onto.node();
-    const path = onto.getPathToCommonAncestor(this.node);
+    console.log(onto);
+    console.log(this.node);
+    const path = this.node.getPathToCommonAncestor(onto);
+    console.log(path);
     return new MergeSquashViewModel(this.node, path);
   }
 
