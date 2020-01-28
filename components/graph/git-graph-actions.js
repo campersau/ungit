@@ -20,13 +20,13 @@ class ActionBase {
       () => !graph.hoverGraphAction() || graph.hoverGraphAction() == this
     );
     this.text = text;
-    this.style = style;
+    this.style = ko.observable(style);
     this.icon = icon;
     this.cssClasses = ko.computed(() => {
       if (!this.isHighlighted() || this.isRunning()) {
-        return `${this.style} dimmed`;
+        return `${this.style()} dimmed`;
       } else {
-        return this.style;
+        return this.style();
       }
     });
   }
@@ -191,6 +191,14 @@ class Merge extends ActionBase {
       .catch((err) => {
         if (err.errorCode != 'merge-failed') this.server.unhandledRejection(err);
       });
+  }
+}
+
+class MergeSquash extends Merge {
+  constructor(graph, node) {
+    super(graph, node)
+    this.text = "Merge Squash";
+    this.style("merge-squash");
   }
 }
 
@@ -411,6 +419,7 @@ const GraphActions = {
   Move: Move,
   Rebase: Rebase,
   Merge: Merge,
+  MergeSquash: MergeSquash,
   Push: Push,
   Reset: Reset,
   Checkout: Checkout,
