@@ -82,8 +82,9 @@ class RebaseViewModel extends HoverViewModel {
 exports.RebaseViewModel = RebaseViewModel;
 
 class MergeSquashViewModel extends RebaseViewModel {
-  constructor(onto, nodesThatWillMove) {
-    super(onto, nodesThatWillMove.slice(0, 2));
+  constructor(from, onto) {
+    console.log(from, onto);
+    super(from, onto);
   }
 }
 exports.MergeSquashViewModel = MergeSquashViewModel;
