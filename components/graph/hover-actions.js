@@ -81,13 +81,6 @@ class RebaseViewModel extends HoverViewModel {
 }
 exports.RebaseViewModel = RebaseViewModel;
 
-class MergeSquashViewModel extends SquashViewModel {
-  constructor(from, onto) {
-    super(from, onto);
-  }
-}
-exports.MergeSquashViewModel = MergeSquashViewModel;
-
 class ResetViewModel extends HoverViewModel {
   constructor(nodes) {
     super();
@@ -141,3 +134,10 @@ class SquashViewModel extends HoverViewModel {
   }
 }
 exports.SquashViewModel = SquashViewModel;
+
+class MergeSquashViewModel extends SquashViewModel {
+  constructor(from, onto) {
+    super(from, onto);
+  }
+}
+exports.MergeSquashViewModel = MergeSquashViewModel;
