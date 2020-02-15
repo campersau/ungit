@@ -17,6 +17,12 @@ class CommitDiff {
     this.loadFileLineDiffs(args);
   }
 
+  onProgramEvent(event) {
+    this.commitLineDiffs().forEach(commitLineDiff => {
+      commitLineDiff.onProgramEvent(event);
+    });
+  }
+
   updateNode(parentElement) {
     ko.renderTemplate('commitdiff', this, {}, parentElement);
   }

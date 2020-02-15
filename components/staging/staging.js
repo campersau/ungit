@@ -86,7 +86,6 @@ class StagingViewModel {
     });
 
     this.refreshContentThrottled = _.throttle(this.refreshContent.bind(this), 400, { trailing: true });
-    this.invalidateFilesDiffsThrottled = _.throttle(this.invalidateFilesDiffs.bind(this), 400, { trailing: true });
     this.refreshContentThrottled();
     this.loadAnyway = false;
     this.isDiagOpen = false;
@@ -108,8 +107,10 @@ class StagingViewModel {
     }
     if (event.event == 'working-tree-changed') {
       this.refreshContentThrottled();
-      this.invalidateFilesDiffsThrottled();
     }
+    this.files().forEach(file => {
+      file.onProgramEvent(event);
+    });
   }
 
   refreshContent() {
@@ -362,6 +363,13 @@ class FileViewModel {
         if (this.diff().render) this.diff().render();
       }
     });
+  }
+
+  onProgramEvent(event) {
+    const diff = this.diff();
+    if (diff && diff.onProgramEvent) {
+      diff.onProgramEvent(event);
+    }
   }
 
   getSpecificDiff() {

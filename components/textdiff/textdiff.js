@@ -79,18 +79,18 @@ class TextDiffViewModel {
     this.htmlSrc = undefined;
     this.isParsed = ko.observable(false);
 
-    programEvents.add(event => {
-      if (event.event === "invalidate-diff-and-render" || event.event === "working-tree-changed") {
-        this.invalidateDiff();
-        if (this.isShowingDiffs()) this.render();
-      }
-    });
-
     this.isShowingDiffs.subscribe(newValue => {
       if (newValue) this.render();
     });
 
     if (this.isShowingDiffs()) { this.render(); }
+  }
+
+  onProgramEvent(event) {
+    if (event.event === "invalidate-diff-and-render" || event.event === "working-tree-changed") {
+      this.invalidateDiff();
+      if (this.isShowingDiffs()) this.render();
+    }
   }
 
   updateNode(parentElement) {

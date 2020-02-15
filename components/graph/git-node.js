@@ -108,6 +108,10 @@ class GitNodeViewModel extends Animateable {
     ];
   }
 
+  onProgramEvent(event) {
+    this.commitComponent.onProgramEvent(event);
+  }
+
   getGraphAttr() {
     return [this.cx(), this.cy()];
   }

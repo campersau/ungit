@@ -263,6 +263,9 @@ class GraphViewModel {
         node.render();
       });
     }
+    this.nodes().forEach(node => {
+      node.onProgramEvent(event);
+    });
   }
 
   updateBranches() {

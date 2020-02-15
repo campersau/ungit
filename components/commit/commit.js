@@ -40,6 +40,13 @@ class CommitViewModel {
     });
   }
 
+  onProgramEvent(event) {
+    const commitDiff = this.commitDiff();
+    if (commitDiff) {
+      commitDiff.onProgramEvent(event);
+    }
+  }
+
   updateNode(parentElement) {
     ko.renderTemplate('commit', this, {}, parentElement);
   }

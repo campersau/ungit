@@ -20,6 +20,13 @@ class CommitLineDiff {
     this.specificDiff = ko.observable(this.getSpecificDiff());
   }
 
+  onProgramEvent(event) {
+    const diff = this.specificDiff();
+    if (diff && diff.onProgramEvent) {
+      diff.onProgramEvent(event);
+    }
+  }
+
   getSpecificDiff() {
     return components.create(`${this.fileType}diff`, {
       filename: this.fileName(),
