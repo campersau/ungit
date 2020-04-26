@@ -21,13 +21,13 @@ class ActionBase {
       () => !graph.hoverGraphAction() || graph.hoverGraphAction() == this
     );
     this.text = text;
-    this.style = ko.observable(style);
+    this.style = style;
     this.icon = icon;
     this.cssClasses = ko.computed(() => {
       if (!this.isHighlighted() || this.isRunning()) {
-        return `${this.style()} dimmed`;
+        return `${this.style} dimmed`;
       } else {
-        return this.style();
+        return this.style;
       }
     });
   }
@@ -161,8 +161,8 @@ class Rebase extends ActionBase {
 }
 
 class Merge extends ActionBase {
-  constructor(graph, node) {
-    super(graph, 'Merge', 'merge', octicons['git-merge'].toSVG({ height: 18 }));
+  constructor(graph, node, text, style, icon) {
+    super(graph, text || 'Merge', style || 'merge', icon || octicons['git-merge'].toSVG({ 'height': 18 }));
     this.node = node;
     this.visible = ko.computed(() => {
       if (this.isRunning()) return true;
@@ -196,9 +196,7 @@ class Merge extends ActionBase {
 
 class MergeSquash extends Merge {
   constructor(graph, node) {
-    super(graph, node)
-    this.text = "Merge Squash";
-    this.style("merge-squash");
+    super(graph, node, 'Squash & Merge', 'squash', octicons.fold.toSVG({ 'height': 18 }));
   }
 
   createHoverGraphic() {
@@ -371,7 +369,7 @@ class Revert extends ActionBase {
 
 class Squash extends ActionBase {
   constructor(graph, node) {
-    super(graph, 'Squash', 'squash', octicons.fold.toSVG({ height: 18 }));
+    super(graph, 'Squash & Merge', 'squash', octicons.fold.toSVG({ 'height': 18 }));
     this.node = node;
     this.visible = ko.computed(() => {
       if (this.isRunning()) return true;
