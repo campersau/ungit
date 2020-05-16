@@ -16,12 +16,8 @@ describe('git-api diff', () => {
   let testDir, testBareDir;
 
   before(async () => {
-    const dir2 = await common.initRepo(req);
-
-    testDir = dir2;
-    const dir = await common.initRepo(req, { bare: true });
-
-    return (testBareDir = dir);
+    testDir = await common.initRepo(req);
+    testBareDir = await common.initRepo(req, { bare: true });
   });
   after(() => common.post(req, '/testing/cleanup', undefined));
 
@@ -62,7 +58,7 @@ describe('git-api diff', () => {
       version: 'current',
     });
 
-    return expect(res.toString()).to.be('png');
+    expect(res.toString()).to.be('png');
   });
 
   it('should be possible to commit a file', () => {
@@ -107,7 +103,7 @@ describe('git-api diff', () => {
       version: 'current',
     });
 
-    return expect(res.toString()).to.be('png');
+    expect(res.toString()).to.be('png');
   });
 
   it('should be possible to modify a file', () => {
@@ -148,7 +144,7 @@ describe('git-api diff', () => {
       version: 'current',
     });
 
-    return expect(res.toString()).to.be('png ~~');
+    expect(res.toString()).to.be('png ~~');
   });
 
   it('getting previous image file should work', async () => {
@@ -158,7 +154,7 @@ describe('git-api diff', () => {
       version: 'HEAD',
     });
 
-    return expect(res.toString()).to.be('png');
+    expect(res.toString()).to.be('png');
   });
 
   it('should be possible to rename a modified file', () => {
@@ -230,7 +226,7 @@ describe('git-api diff', () => {
       version: 'HEAD',
     });
 
-    return expect(res.toString()).to.be('png ~~');
+    expect(res.toString()).to.be('png ~~');
   });
 
   it('diff on bare repository file should work', async () => {
