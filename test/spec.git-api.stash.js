@@ -20,8 +20,7 @@ describe('git-api conflict rebase', function () {
   const testFile1 = 'testfile1.txt';
 
   before(async () => {
-    const dir = await common.createSmallRepo(req);
-    testDir = dir;
+    testDir = await common.createSmallRepo(req);
 
     return common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
   });
