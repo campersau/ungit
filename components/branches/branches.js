@@ -140,9 +140,9 @@ class BranchesViewModel {
             name: branch.refName,
           });
 
-          return programEvents.dispatch({ event: 'working-tree-changed' });
+          programEvents.dispatch({ event: 'working-tree-changed' });
         } catch (e) {
-          return this.server.unhandledRejection(e);
+          this.server.unhandledRejection(e);
         }
       });
   }
