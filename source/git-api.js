@@ -64,11 +64,13 @@ exports.registerApi = (env) => {
     const pathToWatch = path.join(socket.watcherPath, subfolderPath);
     winston.info(`Start watching ${pathToWatch}`);
 
-    await fs.access(pathToWatch).catch(() => {
+    try {
+      await fs.access(pathToWatch);
+    } catch (e) {
       // Sometimes necessary folders, '.../.git/refs/heads' and etc, are not created on git init
       winston.debug(`intended folder to watch doesn't exists, creating: ${pathToWatch}`);
-      return mkdirp(pathToWatch);
-    });
+      await mkdirp(pathToWatch);
+    }
 
     const watcher = watch(pathToWatch, options || {});
     watcher.on('change', (event, filename) => {
@@ -447,14 +449,16 @@ exports.registerApi = (env) => {
         // making calls serially as credential helpers may get confused to which cred to get.
         for (const remote of remotes) {
           if (!remote) continue;
-          await gitPromise({
-            commands: credentialsOption(req.query.socketId, remote).concat(['fetch', remote]),
-            repoPath: req.query.path,
-            timeout: tenMinTimeoutMs,
-          }).catch((e) =>
+          try {
+            await gitPromise({
+              commands: credentialsOption(req.query.socketId, remote).concat(['fetch', remote]),
+              repoPath: req.query.path,
+              timeout: tenMinTimeoutMs,
+            });
+          } catch (e) {
             // ignore fetch err as it is most likely credential
-            winston.warn('err during remote fetch for /refs', e)
-          );
+            winston.warn('err during remote fetch for /refs', e);
+          }
         }
       })
       .then(() => gitPromise(['show-ref', '-d'], req.query.path))
