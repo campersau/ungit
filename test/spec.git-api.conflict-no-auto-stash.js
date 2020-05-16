@@ -19,8 +19,7 @@ describe('git-api conflict checkout no auto stash', function () {
   const testFile1 = 'testfile1.txt';
 
   before(async () => {
-    const dir = await common.initRepo(req);
-    testDir = dir;
+    testDir = await common.initRepo(req);
 
     await common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
 
@@ -53,12 +52,12 @@ describe('git-api conflict checkout no auto stash', function () {
       name: testBranch,
     });
 
-    return expect(gitErr.errorCode).to.be('local-changes-would-be-overwritten');
+    expect(gitErr.errorCode).to.be('local-changes-would-be-overwritten');
   });
 
   it('checkout should say we are still on master', async () => {
     const res = await common.get(req, '/checkout', { path: testDir });
 
-    return expect(res).to.be('master');
+    expect(res).to.be('master');
   });
 });
