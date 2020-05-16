@@ -12,7 +12,7 @@ describe('cache', () => {
 
     const val = await cache.resolveFunc(key);
 
-    return expect(val).to.be(0);
+    expect(val).to.be(0);
   });
 
   it('should work when failing sync', async () => {
