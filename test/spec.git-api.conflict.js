@@ -22,8 +22,7 @@ describe('git-api conflict rebase', function () {
   const testBranch = 'testBranch';
 
   before(async () => {
-    const dir = await common.initRepo(req);
-    testDir = dir;
+    testDir = await common.initRepo(req);
 
     await common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
 
@@ -105,8 +104,7 @@ describe('git-api conflict checkout', function () {
   const testFile1 = 'testfile1.txt';
 
   before(async () => {
-    const dir = await common.initRepo(req);
-    testDir = dir;
+    testDir = await common.initRepo(req);
 
     await common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
 
@@ -170,8 +168,7 @@ describe('git-api conflict merge', function () {
   const testFile1 = 'testfile1.txt';
 
   before(async () => {
-    const dir = await common.initRepo(req);
-    testDir = dir;
+    testDir = await common.initRepo(req);
 
     await common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
 
@@ -269,8 +266,7 @@ describe('git-api conflict solve by deleting', function () {
   const testBranch = 'testBranch';
 
   before(async () => {
-    const dir = await common.initRepo(req);
-    testDir = dir;
+    testDir = await common.initRepo(req);
 
     await common.post(req, '/testing/createfile', { file: path.join(testDir, testFile1) });
 
