@@ -24,8 +24,7 @@ describe('git-api conflict rebase', function () {
   this.timeout(8000);
 
   before(async () => {
-    const dir = await common.createSmallRepo(req);
-    testDir = dir;
+    testDir = await common.createSmallRepo(req);
   });
 
   after(() => common.post(req, '/testing/cleanup'));
@@ -61,7 +60,7 @@ describe('git-api conflict rebase', function () {
 
     const res = await common.get(req, '/status', { path: testDir });
 
-    return expect(Object.keys(res.files).length).to.be(2);
+    expect(Object.keys(res.files).length).to.be(2);
   });
 
   it('discard all', async () => {
@@ -69,7 +68,7 @@ describe('git-api conflict rebase', function () {
 
     const res = await common.get(req, '/status', { path: testDir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('making conflicting commit', async () => {
