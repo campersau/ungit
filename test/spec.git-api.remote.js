@@ -38,7 +38,7 @@ describe('git-api remote', function () {
   it('remotes in no-remotes-repo should be zero', async () => {
     const res = await common.get(req, '/remotes', { path: testDirRemote });
 
-    return expect(res.length).to.be(0);
+    expect(res.length).to.be(0);
   });
 
   it('cloning "remote" to "local1" should work', () => {
@@ -58,7 +58,7 @@ describe('git-api remote', function () {
   it('remote/origin in cloned-repo should work', async () => {
     const res = await common.get(req, '/remotes/origin', { path: testDirLocal1 });
 
-    return expect(res.address).to.be(testDirRemote);
+    expect(res.address).to.be(testDirRemote);
   });
 
   it('creating a commit in "local1" repo should work', async () => {
@@ -94,17 +94,17 @@ describe('git-api remote', function () {
     });
   });
 
-  it('log in "local2" should show the init commit', () => {
-    common.get(req, '/gitlog', { path: testDirLocal2 }).then((res) => {
-      expect(res.nodes).to.be.a('array');
-      expect(res.nodes.length).to.be(1);
-      const init = res.nodes[0];
-      expect(init.message.indexOf('Init')).to.be(0);
-      expect(init.refs).to.contain('HEAD');
-      expect(init.refs).to.contain('refs/heads/master');
-      expect(init.refs).to.contain('refs/remotes/origin/master');
-      expect(init.refs).to.contain('refs/remotes/origin/HEAD');
-    });
+  it('log in "local2" should show the init commit', async () => {
+    const res = await common.get(req, '/gitlog', { path: testDirLocal2 });
+
+    expect(res.nodes).to.be.a('array');
+    expect(res.nodes.length).to.be(1);
+    const init = res.nodes[0];
+    expect(init.message.indexOf('Init')).to.be(0);
+    expect(init.refs).to.contain('HEAD');
+    expect(init.refs).to.contain('refs/heads/master');
+    expect(init.refs).to.contain('refs/remotes/origin/master');
+    expect(init.refs).to.contain('refs/remotes/origin/HEAD');
   });
 
   it('creating and pushing a commit in "local1" repo should work', async () => {
@@ -127,39 +127,39 @@ describe('git-api remote', function () {
     return common.post(req, '/fetch', { path: testDirLocal2, remote: 'origin' });
   });
 
-  it('log in "local2" should show the branch as one behind', () => {
-    common.get(req, '/gitlog', { path: testDirLocal2 }).then((res) => {
-      expect(res.nodes).to.be.a('array');
-      expect(res.nodes.length).to.be(2);
-      const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
-      const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
-      expect(init).to.be.ok();
-      expect(commit2).to.be.ok();
-      expect(init.refs).to.contain('HEAD');
-      expect(init.refs).to.contain('refs/heads/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
-    });
+  it('log in "local2" should show the branch as one behind', async () => {
+    const res = await common.get(req, '/gitlog', { path: testDirLocal2 });
+
+    expect(res.nodes).to.be.a('array');
+    expect(res.nodes.length).to.be(2);
+    const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
+    const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
+    expect(init).to.be.ok();
+    expect(commit2).to.be.ok();
+    expect(init.refs).to.contain('HEAD');
+    expect(init.refs).to.contain('refs/heads/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
   });
 
   it('rebasing local master onto remote master should work in "local2"', () => {
     return common.post(req, '/rebase', { path: testDirLocal2, onto: 'origin/master' });
   });
 
-  it('log in "local2" should show the branch as in sync', () => {
-    common.get(req, '/gitlog', { path: testDirLocal2 }).then((res) => {
-      expect(res.nodes).to.be.a('array');
-      expect(res.nodes.length).to.be(2);
-      const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
-      const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
-      expect(init).to.be.ok();
-      expect(commit2).to.be.ok();
-      expect(init.refs).to.eql([]);
-      expect(commit2.refs).to.contain('HEAD');
-      expect(commit2.refs).to.contain('refs/heads/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
-    });
+  it('log in "local2" should show the branch as in sync', async () => {
+    const res = await common.get(req, '/gitlog', { path: testDirLocal2 });
+
+    expect(res.nodes).to.be.a('array');
+    expect(res.nodes.length).to.be(2);
+    const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
+    const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
+    expect(init).to.be.ok();
+    expect(commit2).to.be.ok();
+    expect(init.refs).to.eql([]);
+    expect(commit2.refs).to.contain('HEAD');
+    expect(commit2.refs).to.contain('refs/heads/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
   });
 
   it('creating a commit in "local2" repo should work', async () => {
@@ -180,23 +180,23 @@ describe('git-api remote', function () {
     return common.post(req, '/reset', { path: testDirLocal2, to: 'origin/master', mode: 'hard' });
   });
 
-  it('log in "local2" should show the branch as in sync', () => {
-    return common.get(req, '/gitlog', { path: testDirLocal2 }, (res) => {
-      expect(res.nodes.length).to.be(2);
-      const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
-      const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
-      expect(init.refs).to.eql([]);
-      expect(commit2.refs).to.contain('HEAD');
-      expect(commit2.refs).to.contain('refs/heads/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/master');
-      expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
-    });
+  it('log in "local2" should show the branch as in sync', async () => {
+    const res = await common.get(req, '/gitlog', { path: testDirLocal2 });
+
+    expect(res.nodes.length).to.be(2);
+    const init = _.find(res.nodes, (node) => node.message.indexOf('Init') == 0);
+    const commit2 = _.find(res.nodes, (node) => node.message.indexOf('Commit2') == 0);
+    expect(init.refs).to.eql([]);
+    expect(commit2.refs).to.contain('HEAD');
+    expect(commit2.refs).to.contain('refs/heads/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/master');
+    expect(commit2.refs).to.contain('refs/remotes/origin/HEAD');
   });
 
   it('status should show nothing', async () => {
     const res = await common.get(req, '/status', { path: testDirLocal2 });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be possible to create a tag in "local2"', () => {
@@ -221,6 +221,6 @@ describe('git-api remote', function () {
   it('remote tags in "local2" should show the remote tag', async () => {
     const res = await common.get(req, '/remote/tags', { path: testDirLocal2, remote: 'origin' });
 
-    return expect(res.map((tag) => tag.name)).to.contain('refs/tags/v1.0^{}');
+    expect(res.map((tag) => tag.name)).to.contain('refs/tags/v1.0^{}');
   });
 });
