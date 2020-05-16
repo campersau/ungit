@@ -69,22 +69,17 @@ class RepositoryViewModel {
       const baseRepoPath = await this.server.getPromise('/baserepopath', { path: this.repoPath() });
 
       if (baseRepoPath.path) {
-        return this.server
-          .getProimse('/submodules', { path: baseRepoPath.path })
-          .then((submodules) => {
-            if (Array.isArray(submodules)) {
-              const baseName = this.repoPath().substring(baseRepoPath.path.length + 1);
-              for (let n = 0; n < submodules.length; n++) {
-                if (submodules[n].path === baseName) {
-                  this.parentModulePath(baseRepoPath.path);
-                  this.parentModuleLink(
-                    `/#/repository?path=${encodeURIComponent(baseRepoPath.path)}`
-                  );
-                  return;
-                }
-              }
+        const submodules = await this.server.getProimse('/submodules', { path: baseRepoPath.path });
+        if (Array.isArray(submodules)) {
+          const baseName = this.repoPath().substring(baseRepoPath.path.length + 1);
+          for (let n = 0; n < submodules.length; n++) {
+            if (submodules[n].path === baseName) {
+              this.parentModulePath(baseRepoPath.path);
+              this.parentModuleLink(`/#/repository?path=${encodeURIComponent(baseRepoPath.path)}`);
+              break;
             }
-          });
+          }
+        }
       }
     } catch (err) {
       this.parentModuleLink(undefined);
