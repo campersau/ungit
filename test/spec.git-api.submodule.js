@@ -18,12 +18,8 @@ describe('git-api submodule', function () {
   let testDirMain, testDirSecondary;
 
   before(async () => {
-    const dir2 = await common.createSmallRepo(req);
-
-    testDirMain = dir2;
-    const dir = await common.createSmallRepo(req);
-
-    testDirSecondary = dir;
+    testDirMain = await common.createSmallRepo(req);
+    testDirSecondary = await common.createSmallRepo(req);
   });
 
   after(() => common.post(req, '/testing/cleanup'));
@@ -80,7 +76,7 @@ describe('git-api submodule', function () {
   it('status should be empty after commit', async () => {
     const res = await common.get(req, '/status', { path: testDirMain });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('creating a test file in sub dir should work', () => {
