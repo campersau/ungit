@@ -298,7 +298,7 @@ const pluginsCacheKey = cache.registerFunc(async () => {
   try {
     await fs.access(config.pluginDirectory);
 
-    return loadPlugins(plugins, config.pluginDirectory);
+    await loadPlugins(plugins, config.pluginDirectory);
   } catch (error) {}
 
   return plugins;
@@ -358,15 +358,13 @@ const readUserConfig = async () => {
   try {
     await fs.access(userConfigPath);
 
-    return fs
-      .readFile(userConfigPath, { encoding: 'utf8' })
-      .then((content) => {
-        return JSON.parse(content.toString());
-      })
-      .catch((err) => {
-        winston.error(`Stop at reading ~/.ungitrc because ${err}`);
-        process.exit(0);
-      });
+    try {
+      const content = await fs.readFile(userConfigPath, { encoding: 'utf8' });
+      return JSON.parse(content.toString());
+    } catch (err) {
+      winston.error(`Stop at reading ~/.ungitrc because ${err}`);
+      process.exit(0);
+    }
   } catch (error) {
     return {};
   }
