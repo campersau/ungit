@@ -132,12 +132,11 @@ class AppViewModel {
       })
     );
   }
-  gitSetUserConfig(bugTracking) {
-    this.server.getPromise('/userconfig').then(async (userConfig) => {
-      userConfig.bugtracking = bugTracking;
-      await this.server.postPromise('/userconfig', userConfig);
-      this.bugtrackingEnabled(bugTracking);
-    });
+  async gitSetUserConfig(bugTracking) {
+    const userConfig = await this.server.getPromise('/userconfig');
+    userConfig.bugtracking = bugTracking;
+    await this.server.postPromise('/userconfig', userConfig);
+    this.bugtrackingEnabled(bugTracking);
   }
   enableBugtracking() {
     this.gitSetUserConfig(true);
