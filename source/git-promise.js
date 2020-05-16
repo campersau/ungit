@@ -112,13 +112,14 @@ const gitExecutorProm = async (args, retryCount) => {
     });
   } catch (err) {
     if (retryCount > 0 && isRetryableError(err)) {
-      return new Promise((resolve) => {
+      await new Promise((resolve) => {
         winston.warn(
           `retrying git commands after lock acquired fail. (If persists, lower 'maxConcurrentGitOperations')`
         );
         // sleep random amount between 250 ~ 750 ms
         setTimeout(resolve, Math.floor(Math.random() * 500 + 250));
-      }).then(gitExecutorProm.bind(null, args, retryCount - 1));
+      });
+      await gitExecutorProm.bind(null, args, retryCount - 1);
     } else {
       throw err;
     }
@@ -241,7 +242,7 @@ git.status = async (repoPath, file) => {
     git([gitOptionalLocks, 'status', '-s', '-b', '-u', '-z', file || ''], repoPath)
       .then(gitParser.parseGitStatus)
       .then(async (status) => {
-        await Promise.all([
+        const result = await Promise.all([
           // 0: isRebaseMerge
           fs
             .access(path.join(repoPath, '.git', 'rebase-merge'))
@@ -262,25 +263,24 @@ git.status = async (repoPath, file) => {
             .access(path.join(repoPath, '.git', 'CHERRY_PICK_HEAD'))
             .then(() => true)
             .catch(() => false),
-        ]).then((result) => {
-          status.inRebase = result[0] || result[1];
-          status.inMerge = result[2];
-          status.inCherry = result[3];
-        });
+        ]);
+
+        status.inRebase = result[0] || result[1];
+        status.inMerge = result[2];
+        status.inCherry = result[3];
 
         if (status.inMerge || status.inCherry) {
-          return fs
-            .readFile(path.join(repoPath, '.git', 'MERGE_MSG'), { encoding: 'utf8' })
-            .then((commitMessage) => {
-              status.commitMessage = commitMessage;
-              return status;
-            })
-            .catch((err) => {
-              // 'MERGE_MSG' file is gone away, which means we are no longer in merge state
-              // and state changed while this call is being made.
-              status.inMerge = status.inCherry = false;
-              return status;
+          try {
+            const commitMessage = await fs.readFile(path.join(repoPath, '.git', 'MERGE_MSG'), {
+              encoding: 'utf8',
             });
+            status.commitMessage = commitMessage;
+          } catch (err) {
+            // 'MERGE_MSG' file is gone away, which means we are no longer in merge state
+            // and state changed while this call is being made.
+            status.inMerge = status.inCherry = false;
+          }
+          return status;
         }
         return status;
       }),
@@ -335,20 +335,19 @@ git.resolveConflicts = async (repoPath, files) => {
 git.stashExecuteAndPop = async (commands, repoPath, allowError, outPipe, inPipe, timeout) => {
   let hadLocalChanges = true;
 
-  await git(['stash'], repoPath)
-    .catch((err) => {
-      if (err.stderr.indexOf('You do not have the initial commit yet') != -1) {
-        hadLocalChanges = err.stderr.indexOf('You do not have the initial commit yet') == -1;
-      } else {
-        throw err;
-      }
-    })
-    .then((result) => {
-      if (!result || result.indexOf('No local changes to save') != -1) {
-        hadLocalChanges = false;
-      }
-      return git(commands, repoPath, allowError, outPipe, inPipe, timeout);
-    });
+  try {
+    const result = await git(['stash'], repoPath);
+    if (!result || result.indexOf('No local changes to save') != -1) {
+      hadLocalChanges = false;
+    }
+  } catch (err) {
+    if (err.stderr.indexOf('You do not have the initial commit yet') != -1) {
+      hadLocalChanges = err.stderr.indexOf('You do not have the initial commit yet') == -1;
+    } else {
+      throw err;
+    }
+  }
+  await git(commands, repoPath, allowError, outPipe, inPipe, timeout);
 
   return hadLocalChanges ? git(['stash', 'pop'], repoPath) : null;
 };
@@ -359,45 +358,40 @@ git.binaryFileContent = (repoPath, filename, version, outPipe) => {
 
 git.diffFile = async (repoPath, filename, oldFilename, sha1, ignoreWhiteSpace) => {
   if (sha1) {
-    return git(['rev-list', '--max-parents=0', sha1], repoPath).then((initialCommitSha1) => {
-      let prevSha1 = sha1 == initialCommitSha1.trim() ? gitEmptyReproSha1 : `${sha1}^`;
-      if (oldFilename && oldFilename !== filename) {
-        return git(
-          [
-            'diff',
-            ignoreWhiteSpace ? '-w' : '',
-            `${prevSha1}:${oldFilename.trim()}`,
-            `${sha1}:${filename.trim()}`,
-          ],
-          repoPath
-        );
-      } else {
-        return git(
-          ['diff', ignoreWhiteSpace ? '-w' : '', prevSha1, sha1, '--', filename.trim()],
-          repoPath
-        );
-      }
-    });
+    const initialCommitSha1 = await git(['rev-list', '--max-parents=0', sha1], repoPath);
+    let prevSha1 = sha1 == initialCommitSha1.trim() ? gitEmptyReproSha1 : `${sha1}^`;
+    if (oldFilename && oldFilename !== filename) {
+      return git(
+        [
+          'diff',
+          ignoreWhiteSpace ? '-w' : '',
+          `${prevSha1}:${oldFilename.trim()}`,
+          `${sha1}:${filename.trim()}`,
+        ],
+        repoPath
+      );
+    } else {
+      return git(
+        ['diff', ignoreWhiteSpace ? '-w' : '', prevSha1, sha1, '--', filename.trim()],
+        repoPath
+      );
+    }
   }
 
-  const status = await // if bare do not call status
-  git.revParse(repoPath).then((revParse) => {
-    return revParse.type === 'bare' ? { files: {} } : git.status(repoPath);
-  });
+  const revParse = await git.revParse(repoPath);
+  const status = revParse.type === 'bare' ? { files: {} } : await git.status(repoPath); // if bare do not call status
 
   const file = status.files[filename];
   if (!file) {
-    return fs
-      .access(path.join(repoPath, filename))
-      .then(() => {
-        return [];
-      })
-      .catch(() => {
-        throw { error: `No such file: ${filename}`, errorCode: 'no-such-file' };
-      });
-    // If the file is new or if it's a directory, i.e. a submodule
+    try {
+      await fs.access(path.join(repoPath, filename));
+      return [];
+    } catch (e) {
+      throw { error: `No such file: ${filename}`, errorCode: 'no-such-file' };
+    }
   } else {
     if (file && file.isNew) {
+      // If the file is new or if it's a directory, i.e. a submodule
       return git(
         ['diff', '--no-index', isWindows ? 'NUL' : '/dev/null', filename.trim()],
         repoPath,
@@ -415,7 +409,8 @@ git.diffFile = async (repoPath, filename, oldFilename, sha1, ignoreWhiteSpace) =
 };
 
 git.getCurrentBranch = async (repoPath) => {
-  const branches = await git(['branch'], repoPath).then(gitParser.parseGitBranches);
+  const text = await git(['branch'], repoPath);
+  const branches = gitParser.parseGitBranches(text);
 
   let branch = branches.find((branch) => branch.current);
   if (branch) {
@@ -442,15 +437,20 @@ git.discardChangesInFile = async (repoPath, filename) => {
     return git(['rm', '-f', filename], repoPath);
   } else if (fileStatus.isNew) {
     // new file, junst unlink
-    return fs.unlink(fullPath).catch((err) => {
+    try {
+      return await fs.unlink(fullPath);
+    } catch (err) {
       throw { command: 'unlink', error: err };
-    });
+    }
   }
 
-  const isSubrepoChange = await fs
-    .stat(fullPath)
-    .then((stats) => stats.isDirectory())
-    .catch(() => false);
+  let isSubrepoChange;
+  try {
+    const stats = await fs.stat(fullPath);
+    isSubrepoChange = stats.isDirectory();
+  } catch (e) {
+    isSubrepoChange = false;
+  }
 
   if (isSubrepoChange) {
     return git(['submodule', 'sync'], repoPath).then(() =>
@@ -468,76 +468,69 @@ git.applyPatchedDiff = (repoPath, patchedDiff) => {
 };
 
 git.commit = async (repoPath, amend, emptyCommit, message, files) => {
+  if (message == undefined) {
+    throw { error: 'Must specify commit message' };
+  }
+  if ((!Array.isArray(files) || files.length == 0) && !amend && !emptyCommit) {
+    throw { error: 'Must specify files or amend to commit' };
+  }
+
   try {
-    await new Promise((resolve, reject) => {
-      if (message == undefined) {
-        reject({ error: 'Must specify commit message' });
+    const status = await git.status(repoPath);
+    const toAdd = [];
+    const toRemove = [];
+    const promises = []; // promises that patches each files individually
+
+    for (let v in files) {
+      let file = files[v];
+      let fileStatus = status.files[file.name] || status.files[path.relative(repoPath, file.name)];
+      if (!fileStatus) {
+        throw { error: `No such file in staging: ${file.name}` };
       }
-      if ((!Array.isArray(files) || files.length == 0) && !amend && !emptyCommit) {
-        reject({ error: 'Must specify files or amend to commit' });
-      }
-      resolve();
-    })
-      .then(() => {
-        return git.status(repoPath);
-      })
-      .then((status) => {
-        const toAdd = [];
-        const toRemove = [];
-        const promises = []; // promises that patches each files individually
 
-        for (let v in files) {
-          let file = files[v];
-          let fileStatus =
-            status.files[file.name] || status.files[path.relative(repoPath, file.name)];
-          if (!fileStatus) {
-            throw { error: `No such file in staging: ${file.name}` };
-          }
-
-          if (fileStatus.removed) {
-            toRemove.push(file.name.trim());
-          } else if (files[v].patchLineList) {
-            promises.push(
-              git(['diff', '--', file.name.trim()], repoPath)
-                .then(gitParser.parsePatchDiffResult.bind(null, file.patchLineList))
-                .then(git.applyPatchedDiff.bind(null, repoPath))
-            );
-          } else {
-            toAdd.push(file.name.trim());
-          }
-        }
-
+      if (fileStatus.removed) {
+        toRemove.push(file.name.trim());
+      } else if (files[v].patchLineList) {
         promises.push(
-          Promise.resolve()
-            .then(() => {
-              if (toRemove.length > 0)
-                return git(
-                  ['update-index', '--remove', '--stdin'],
-                  repoPath,
-                  null,
-                  null,
-                  toRemove.join('\n')
-                );
-            })
-            .then(() => {
-              if (toAdd.length > 0)
-                return git(
-                  ['update-index', '--add', '--stdin'],
-                  repoPath,
-                  null,
-                  null,
-                  toAdd.join('\n')
-                );
-            })
+          git(['diff', '--', file.name.trim()], repoPath)
+            .then(gitParser.parsePatchDiffResult.bind(null, file.patchLineList))
+            .then(git.applyPatchedDiff.bind(null, repoPath))
         );
+      } else {
+        toAdd.push(file.name.trim());
+      }
+    }
 
-        return Promise.all(promises);
-      });
+    promises.push(
+      Promise.resolve()
+        .then(() => {
+          if (toRemove.length > 0)
+            return git(
+              ['update-index', '--remove', '--stdin'],
+              repoPath,
+              null,
+              null,
+              toRemove.join('\n')
+            );
+        })
+        .then(() => {
+          if (toAdd.length > 0)
+            return git(
+              ['update-index', '--add', '--stdin'],
+              repoPath,
+              null,
+              null,
+              toAdd.join('\n')
+            );
+        })
+    );
+
+    await Promise.all(promises);
 
     const ammendFlag = amend ? '--amend' : '';
     const allowedEmptyFlag = emptyCommit || amend ? '--allow-empty' : '';
     const isGPGSign = config.isForceGPGSign ? '-S' : '';
-    return git(
+    return await git(
       ['commit', ammendFlag, allowedEmptyFlag, isGPGSign, '--file=-'],
       repoPath,
       null,
@@ -563,20 +556,19 @@ git.revParse = async (repoPath) => {
       // bare repositories don't support `--show-toplevel` since git 2.25
       return { type: 'bare', gitRootPath: repoPath };
     }
-    return git(['rev-parse', '--show-toplevel'], repoPath).then((topLevel) => {
-      const rootPath = path.normalize(topLevel.trim() ? topLevel.trim() : repoPath);
-      if (resultLines[0].indexOf('true') > -1) {
-        return { type: 'inited', gitRootPath: rootPath };
-      }
-      return { type: 'uninited', gitRootPath: rootPath };
-    });
+    const topLevel = await git(['rev-parse', '--show-toplevel'], repoPath);
+    const rootPath = path.normalize(topLevel.trim() ? topLevel.trim() : repoPath);
+    if (resultLines[0].indexOf('true') > -1) {
+      return { type: 'inited', gitRootPath: rootPath };
+    }
+    return { type: 'uninited', gitRootPath: rootPath };
   } catch (err) {
     return { type: 'uninited', gitRootPath: path.normalize(repoPath) };
   }
 };
 
 git.log = async (path, limit, skip, maxActiveBranchSearchIteration) => {
-  let log = await git(
+  const logText = await git(
     [
       'log',
       '--cc',
@@ -596,25 +588,23 @@ git.log = async (path, limit, skip, maxActiveBranchSearchIteration) => {
       `--skip=${skip}`,
     ],
     path
-  ).then(gitParser.parseGitLog);
+  );
 
-  log = log ? log : [];
+  const log = gitParser.parseGitLog(logText);
+
   if (maxActiveBranchSearchIteration > 0 && !log.isHeadExist && log.length > 0) {
-    return git
-      .log(
-        path,
-        config.numberOfNodesPerLoad + limit,
-        config.numberOfNodesPerLoad + skip,
-        maxActiveBranchSearchIteration - 1
-      )
-      .then((innerLog) => {
-        return {
-          limit: limit + (innerLog.isHeadExist ? 0 : config.numberOfNodesPerLoad),
-          skip: skip + (innerLog.isHeadExist ? 0 : config.numberOfNodesPerLoad),
-          nodes: log.concat(innerLog.nodes),
-          isHeadExist: innerLog.isHeadExist,
-        };
-      });
+    const innerLog = await git.log(
+      path,
+      config.numberOfNodesPerLoad + limit,
+      config.numberOfNodesPerLoad + skip,
+      maxActiveBranchSearchIteration - 1
+    );
+    return {
+      limit: limit + (innerLog.isHeadExist ? 0 : config.numberOfNodesPerLoad),
+      skip: skip + (innerLog.isHeadExist ? 0 : config.numberOfNodesPerLoad),
+      nodes: log.concat(innerLog.nodes),
+      isHeadExist: innerLog.isHeadExist,
+    };
   } else {
     return { limit: limit, skip: skip, nodes: log, isHeadExist: log.isHeadExist };
   }
