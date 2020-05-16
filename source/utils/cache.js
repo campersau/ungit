@@ -12,20 +12,15 @@ const funcMap = {}; // Will there ever be a use case where this is a cache with 
 cache.resolveFunc = async (key) => {
   let result = cache.get(key);
   if (result !== undefined) {
-    return Promise.resolve(result);
+    return result;
   }
   result = funcMap[key];
   if (result === undefined) {
-    return Promise.reject(new Error(`Cache entry ${key} not found`));
+    throw new Error(`Cache entry ${key} not found`);
   }
-  try {
-    result = result.func();
-  } catch (err) {
-    return Promise.reject(err);
-  }
+  result = result.func();
 
-  const r = await // func is found, resolve, set with TTL and return result
-  Promise.resolve(result);
+  const r = await Promise.resolve(result); // func is found, resolve, set with TTL and return result
 
   cache.set(key, r, funcMap[key].ttl);
   return r;
