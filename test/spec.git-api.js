@@ -21,8 +21,7 @@ describe('git-api', () => {
   before('creating test dir should work', async () => {
     const res = await common.post(req, '/testing/createtempdir');
     expect(res.path).to.be.ok();
-    const dir = await fs.realpath(res.path);
-    testDir = dir;
+    testDir = await fs.realpath(res.path);
   });
 
   after(() => common.post(req, '/testing/cleanup'));
@@ -51,7 +50,7 @@ describe('git-api', () => {
   it('quickstatus should say uninited in uninited directory', async () => {
     const res = await common.get(req, '/quickstatus', { path: testDir });
 
-    return expect(res).to.eql({ type: 'uninited', gitRootPath: testDir });
+    expect(res).to.eql({ type: 'uninited', gitRootPath: testDir });
   });
 
   it('status should fail in non-existing directory', () => {
@@ -63,7 +62,7 @@ describe('git-api', () => {
   it('quickstatus should say false in non-existing directory', async () => {
     const res = await common.get(req, '/quickstatus', { path: path.join(testDir, 'nowhere') });
 
-    return expect(res).to.eql({ type: 'no-such-path', gitRootPath: path.join(testDir, 'nowhere') });
+    expect(res).to.eql({ type: 'no-such-path', gitRootPath: path.join(testDir, 'nowhere') });
   });
 
   it('init should succeed in uninited directory', () => {
@@ -77,7 +76,7 @@ describe('git-api', () => {
   it('quickstatus should say inited in inited directory', async () => {
     const res = await common.get(req, '/quickstatus', { path: testDir });
 
-    return expect(res).to.eql({ type: 'inited', gitRootPath: testDir });
+    expect(res).to.eql({ type: 'inited', gitRootPath: testDir });
   });
 
   it("commit should fail on when there's no files to commit", (done) => {
@@ -216,7 +215,7 @@ describe('git-api', () => {
   it('amend should not produce additional log-entry', async () => {
     const res = await common.get(req, '/gitlog', { path: testDir });
 
-    return expect(res.nodes.length).to.be(1);
+    expect(res.nodes.length).to.be(1);
   });
 
   const testFile2 = 'my test.txt';
@@ -350,7 +349,7 @@ describe('git-api', () => {
   it('status should list nothing', async () => {
     const res = await common.get(req, '/status', { path: testDir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   const testFile4 = path.join(testSubDir, 'renamed.txt').replace(/\\/, '/');
@@ -386,25 +385,23 @@ describe('git-api', () => {
     expect(res.nodes.length).to.be(1);
   });
 
-  it('get the baserepopath without base repo should work', (done) => {
+  it('get the baserepopath without base repo should work', async () => {
     const baseRepoPathTestDir = path.join(testDir, 'depth1', 'depth2');
 
-    mkdirp(baseRepoPathTestDir).then(async () => {
-      const res = await common.get(req, '/baserepopath', { path: baseRepoPathTestDir });
-      // Some oses uses symlink and path will be different as git will return resolved symlink
-      expect(res.path).to.contain(testDir);
-      done();
-    });
+    await mkdirp(baseRepoPathTestDir);
+    const res = await common.get(req, '/baserepopath', { path: baseRepoPathTestDir });
+    // Some oses uses symlink and path will be different as git will return resolved symlink
+    expect(res.path).to.contain(testDir);
   });
 
   it('test gitignore api endpoint', async () => {
     await common.put(req, '/gitignore', { path: testDir, data: 'abc' });
 
     const res2 = await common.get(req, '/gitignore', { path: testDir });
-    await expect(res2.content).to.be('abc');
+    expect(res2.content).to.be('abc');
     await common.put(req, '/gitignore', { path: testDir, data: '' });
     const res = await common.get(req, '/gitignore', { path: testDir });
 
-    return expect(res.content).to.be('');
+    expect(res.content).to.be('');
   });
 });
