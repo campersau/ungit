@@ -25,7 +25,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be able to discard a changed file', async () => {
@@ -40,7 +40,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be able to discard a removed file', async () => {
@@ -55,7 +55,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be able to discard a new and staged file', async () => {
@@ -69,7 +69,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be able to discard a staged and removed file', async () => {
@@ -84,7 +84,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   it('should be able to discard discard submodule changes', async function () {
@@ -117,7 +117,7 @@ describe('git-api discardchanges', () => {
 
     const res = await common.get(req, '/status', { path: dir });
 
-    return expect(Object.keys(res.files).length).to.be(0);
+    expect(Object.keys(res.files).length).to.be(0);
   });
 
   // Need to make discardchanges even more powerful to handle this
