@@ -21,8 +21,8 @@ class SubmodulesViewModel {
   }
 
   updateNode(parentElement) {
-    this.fetchSubmodules().then((submoduleViewModel) => {
-      ko.renderTemplate('submodules', submoduleViewModel, {}, parentElement);
+    this.fetchSubmodules().then(() => {
+      ko.renderTemplate('submodules', this, {}, parentElement);
     });
   }
 
@@ -31,43 +31,42 @@ class SubmodulesViewModel {
       const submodules = await this.server.getPromise('/submodules', { path: this.repoPath() });
 
       this.submodules(submodules && Array.isArray(submodules) ? submodules : []);
-      return this;
     } catch (e) {
-      return this.server.unhandledRejection(e);
+      this.server.unhandledRejection(e);
     }
   }
 
-  updateSubmodules() {
+  async updateSubmodules() {
     if (this.isUpdating) return;
     this.isUpdating = true;
-    return this.server
-      .postPromise('/submodules/update', { path: this.repoPath() })
-      .catch((e) => this.server.unhandledRejection(e))
-      .finally(() => {
-        this.isUpdating = false;
-      });
+    try {
+      await this.server.postPromise('/submodules/update', { path: this.repoPath() });
+    } catch (e) {
+      this.server.unhandledRejection(e);
+    } finally {
+      this.isUpdating = false;
+    }
   }
 
   showAddSubmoduleDialog() {
     components
       .create('addsubmoduledialog')
       .show()
-      .closeThen((diag) => {
+      .closeThen(async (diag) => {
         if (!diag.isSubmitted()) return;
         this.isUpdating = true;
-        this.server
-          .postPromise('/submodules/add', {
+        try {
+          await this.server.postPromise('/submodules/add', {
             path: this.repoPath(),
             submoduleUrl: diag.url(),
             submodulePath: diag.path(),
-          })
-          .then(() => {
-            programEvents.dispatch({ event: 'submodule-fetch' });
-          })
-          .catch((e) => this.server.unhandledRejection(e))
-          .finally(() => {
-            this.isUpdating = false;
           });
+          programEvents.dispatch({ event: 'submodule-fetch' });
+        } catch (e) {
+          this.server.unhandledRejection(e);
+        } finally {
+          this.isUpdating = false;
+        }
       });
   }
 
@@ -86,18 +85,18 @@ class SubmodulesViewModel {
         details: `Deleting ${submodule.name} submodule cannot be undone with ungit.`,
       })
       .show()
-      .closeThen((diag) => {
+      .closeThen(async (diag) => {
         if (!diag.result()) return;
-        this.server
-          .delPromise('/submodules', {
+        try {
+          await this.server.delPromise('/submodules', {
             path: this.repoPath(),
             submodulePath: submodule.path,
             submoduleName: submodule.name,
-          })
-          .then(() => {
-            programEvents.dispatch({ event: 'submodule-fetch' });
-          })
-          .catch((e) => this.server.unhandledRejection(e));
+          });
+          programEvents.dispatch({ event: 'submodule-fetch' });
+        } catch (e) {
+          this.server.unhandledRejection(e);
+        }
       });
   }
 }
