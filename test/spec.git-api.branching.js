@@ -19,12 +19,8 @@ describe('git-api branching', function () {
   this.timeout(8000);
 
   before(async () => {
-    const res2 = await common.initRepo(req);
-
-    testDir = res2;
-    const res = await common.get(req, '/gitconfig', { path: testDir });
-
-    gitConfig = res;
+    testDir = await common.initRepo(req);
+    gitConfig = await common.get(req, '/gitconfig', { path: testDir });
   });
   after(() => common.post(req, '/testing/cleanup'));
 
@@ -79,7 +75,7 @@ describe('git-api branching', function () {
   it('get branch should show the new branch as current', async () => {
     const res = await common.get(req, '/checkout', { path: testDir });
 
-    return expect(res).to.be(testBranch);
+    expect(res).to.be(testBranch);
   });
 
   const commitMessage3 = 'Commit 3';
@@ -165,7 +161,7 @@ describe('git-api branching', function () {
 
   it('should be possible to list tag', async () => {
     const res = await common.get(req, '/tags', { path: testDir });
-    return expect(res.length).to.be(1);
+    expect(res.length).to.be(1);
   });
 
   it('should be possible to delete a tag', () => {
@@ -174,7 +170,7 @@ describe('git-api branching', function () {
 
   it('tag should be removed', async () => {
     const res = await common.get(req, '/tags', { path: testDir });
-    return expect(res.length).to.be(0);
+    expect(res.length).to.be(0);
   });
 
   it('should be possible to delete a branch', () => {
@@ -184,6 +180,6 @@ describe('git-api branching', function () {
   it('branch should be removed', async () => {
     const res = await common.get(req, '/branches', { path: testDir });
 
-    return expect(res.length).to.be(1);
+    expect(res.length).to.be(1);
   });
 });
