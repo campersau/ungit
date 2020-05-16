@@ -170,7 +170,7 @@ class RefViewModel extends Selectable {
       }
       this.node(targetNode);
     } catch (e) {
-      return this.server.unhandledRejection(e);
+      this.server.unhandledRejection(e);
     }
   }
 
@@ -229,15 +229,17 @@ class RefViewModel extends Selectable {
     return this.node() != remoteRef.node();
   }
 
-  createRemoteRef() {
-    return this.server
-      .postPromise('/push', {
+  async createRemoteRef() {
+    try {
+      await this.server.postPromise('/push', {
         path: this.graph.repoPath(),
         remote: this.graph.currentRemote(),
         refSpec: this.refName,
         remoteBranch: this.refName,
-      })
-      .catch((e) => this.server.unhandledRejection(e));
+      });
+    } catch (e) {
+      this.server.unhandledRejection(e);
+    }
   }
 
   async checkout() {
@@ -246,7 +248,7 @@ class RefViewModel extends Selectable {
 
     try {
       if (isRemote && !isLocalCurrent) {
-        return this.server.postPromise('/branches', {
+        await this.server.postPromise('/branches', {
           path: this.graph.repoPath(),
           name: this.refName,
           sha1: this.name,
@@ -258,7 +260,7 @@ class RefViewModel extends Selectable {
         name: this.refName,
       });
       if (isRemote && isLocalCurrent) {
-        return this.server.postPromise('/reset', {
+        await this.server.postPromise('/reset', {
           path: this.graph.repoPath(),
           to: this.name,
           mode: 'hard',
