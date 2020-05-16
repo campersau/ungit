@@ -64,13 +64,14 @@ class PathViewModel {
       return null;
     } catch (err) {}
   }
-  initRepository() {
-    return this.server
-      .postPromise('/init', { path: this.repoPath() })
-      .catch((e) => this.server.unhandledRejection(e))
-      .finally((res) => {
-        this.updateStatus();
-      });
+  async initRepository() {
+    try {
+      await this.server.postPromise('/init', { path: this.repoPath() });
+    } catch (e) {
+      this.server.unhandledRejection(e);
+    } finally {
+      this.updateStatus();
+    }
   }
   onProgramEvent(event) {
     if (event.event == 'working-tree-changed') this.updateStatus();
@@ -78,29 +79,32 @@ class PathViewModel {
 
     if (this.repository()) this.repository().onProgramEvent(event);
   }
-  cloneRepository() {
+  async cloneRepository() {
     this.status('cloning');
     const dest = this.cloneDestination() || this.cloneDestinationImplicit();
 
-    return this.server
-      .postPromise('/clone', {
+    try {
+      const res = await this.server.postPromise('/clone', {
         path: this.repoPath(),
         url: this.cloneUrl(),
         destinationDir: dest,
         isRecursiveSubmodule: this.isRecursiveSubmodule(),
-      })
-      .then((res) => navigation.browseTo('repository?path=' + encodeURIComponent(res.path)))
-      .catch((e) => this.server.unhandledRejection(e))
-      .finally(() => {
-        programEvents.dispatch({ event: 'working-tree-changed' });
       });
+      navigation.browseTo('repository?path=' + encodeURIComponent(res.path));
+    } catch (e) {
+      this.server.unhandledRejection(e);
+    } finally {
+      programEvents.dispatch({ event: 'working-tree-changed' });
+    }
   }
   async createDir() {
     this.showDirectoryCreatedAlert(true);
 
-    await this.server
-      .postPromise('/createDir', { dir: this.repoPath() })
-      .catch((e) => this.server.unhandledRejection(e));
+    try {
+      await this.server.postPromise('/createDir', { dir: this.repoPath() });
+    } catch (e) {
+      this.server.unhandledRejection(e);
+    }
 
     return this.updateStatus();
   }
