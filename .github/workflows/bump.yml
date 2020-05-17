@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - master
+      - tmp
   schedule:
     - cron: '0 0 * * *'
 
 jobs:
   bump:
-    if: github.repository == 'FredrikNoren/ungit'
+#    if: github.repository == 'FredrikNoren/ungit'
     runs-on: ubuntu-latest
 
     steps:
@@ -22,8 +23,8 @@ jobs:
 
       - run: npm ci
       - run: |
-            body=$(npm run bumpdependencies)
-            echo $body
+            body="$(npm run bumpdependencies)"
+            echo "$body"
             body="${body//'%'/'%25'}"
             body="${body//$'\n'/'%0A'}"
             body="${body//$'\r'/'%0D'}"
@@ -42,4 +43,4 @@ jobs:
             ${{ steps.bumpdependencies.outputs.body }}
             ```
           labels: dependencies
-          branch: bumpdependencies
+          branch: bumpdependencies2
