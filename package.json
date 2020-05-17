@@ -13,6 +13,7 @@
     "format": "npm run lint -- --fix",
     "build": "grunt",
     "watch": "grunt watch",
+    "bumpdependencies": "ncu --upgrade",
     "package": "grunt package",
     "travisnpmpublish": "grunt travisnpmpublish",
     "electronpublish": "grunt electronpublish"
@@ -87,7 +88,7 @@
     "grunt-zip-directories": "~1.0.1",
     "istanbul": "~0.4.5",
     "mocha": "~7.1.2",
-    "pkg-versions": "~2.1.0",
+    "npm-check-updates": "~6.0.1",
     "prettier": "~2.0.5",
     "puppeteer": "~3.0.4",
     "superagent": "~5.2.2",
