@@ -59,7 +59,7 @@ const baseDir = path.join(__dirname, '..');
   b.require('knockout', { expose: 'knockout' });
   b.require('lodash', { expose: 'lodash' });
   b.require(path.join(baseDir, 'node_modules/snapsvg/src/mina.js'), { expose: 'mina' });
-  b.require('moment', { expose: 'moment' });
+  b.require('luxon', { expose: 'luxon' });
   b.require('@primer/octicons', { expose: 'octicons' });
   b.require('signals', { expose: 'signals' });
   const ungitjsFile = path.join(baseDir, 'public/js/ungit.js');

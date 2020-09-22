@@ -1,6 +1,6 @@
 const ko = require('knockout');
 const _ = require('lodash');
-const moment = require('moment');
+const DateTime = require('luxon').DateTime;
 const octicons = require('octicons');
 const components = require('ungit-components');
 const GitNodeViewModel = require('./git-node');
@@ -166,7 +166,7 @@ class GraphViewModel {
 
     this.markNodesIdeologicalBranches(this.refs(), nodes, this.nodesById);
 
-    const updateTimeStamp = moment().valueOf();
+    const updateTimeStamp = DateTime.local().valueOf();
     if (this.HEAD()) {
       this.traverseNodeLeftParents(this.HEAD(), (node) => {
         node.ancestorOfHEADTimeStamp = updateTimeStamp;

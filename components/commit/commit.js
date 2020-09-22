@@ -1,6 +1,6 @@
 const ko = require('knockout');
 const md5 = require('blueimp-md5');
-const moment = require('moment');
+const DateTime = require('luxon').DateTime;
 const octicons = require('octicons');
 const components = require('ungit-components');
 
@@ -48,14 +48,14 @@ class CommitViewModel {
   }
 
   setData(args) {
-    this.commitTime(moment(new Date(args.commitDate)));
-    this.authorTime(moment(new Date(args.authorDate)));
+    this.commitTime(DateTime.fromJSDate(new Date(args.commitDate)));
+    this.authorTime(DateTime.fromJSDate(new Date(args.authorDate)));
     const message = args.message.split('\n');
     this.message(args.message);
     this.title(message[0]);
     this.body(message.slice(message[1] ? 1 : 2).join('\n'));
-    this.authorDate(moment(new Date(args.authorDate)));
-    this.authorDateFromNow(this.authorDate().fromNow());
+    this.authorDate(DateTime.fromJSDate(new Date(args.authorDate)));
+    this.authorDateFromNow(this.authorDate().toRelative());
     this.authorName(args.authorName);
     this.authorEmail(args.authorEmail);
     this.numberOfAddedLines(args.additions);
@@ -78,7 +78,7 @@ class CommitViewModel {
     this.lastUpdatedAuthorDateFromNow += deltaT;
     if (this.lastUpdatedAuthorDateFromNow > 60 * 1000) {
       this.lastUpdatedAuthorDateFromNow = 0;
-      this.authorDateFromNow(this.authorDate().fromNow());
+      this.authorDateFromNow(this.authorDate().toRelative());
     }
   }
 

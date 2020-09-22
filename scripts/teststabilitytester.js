@@ -1,7 +1,7 @@
 // This repeatedly runs the click and unit tests to verify their stability
 
 var childProcess = require('child_process');
-var moment = require('moment');
+var DateTime = require('luxon').DateTime;
 
 var count = 0;
 var clickTestErrors = 0;
@@ -37,9 +37,9 @@ var run = function () {
           Math.floor((100 * unitTestErrors) / count) +
           '%) ' +
           '(this round: ' +
-          moment.duration(Date.now() - testTime).asSeconds() +
+          DateTime.fromJSDate(testTime).diffNow().seconds +
           'sec, total: ' +
-          moment.duration(Date.now() - startTime).humanize() +
+          DateTime.fromJSDate(startTime).diffNow().toRelative() +
           ')'
       );
       run();

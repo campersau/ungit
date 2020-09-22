@@ -1,6 +1,6 @@
 const ko = require('knockout');
 const octicons = require('octicons');
-const moment = require('moment');
+const DateTime = require('luxon').DateTime;
 const components = require('ungit-components');
 const storage = require('ungit-storage');
 
@@ -12,7 +12,9 @@ class StashItemViewModel {
     this.server = stash.server;
     this.id = data.reflogId;
     this.sha1 = data.sha1;
-    this.title = `${data.reflogName} ${moment(new Date(data.commitDate)).fromNow()}`;
+    this.title = `${data.reflogName} ${DateTime.fromJSDate(
+      new Date(data.commitDate)
+    ).toRelative()}`;
     this.message = data.message;
     this.showCommitDiff = ko.observable(false);
 
