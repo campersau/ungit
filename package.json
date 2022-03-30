@@ -52,6 +52,7 @@
     "moment": "~2.29.3",
     "node-cache": "~5.1.2",
     "node-watch": "^0.7.3",
+    "nodegit": "^0.27.0",
     "nprogress": "~0.2.0",
     "open": "~8.4.0",
     "p-limit": "~4.0.0",
@@ -73,6 +74,8 @@
   },
   "devDependencies": {
     "@homer0/prettier-plugin-jsdoc": "^5.1.1",
+    "@types/mocha": "~9.1.0",
+    "@types/nodegit": "^0.27.10",
     "archiver": "~5.3.1",
     "browserify": "~17.0.0",
     "dedent": "~0.7.0",
