@@ -179,8 +179,8 @@ exports.registerApi = (env) => {
         logger.info('emitting working-tree-changed to sockets, manually triggered');
       }
     },
-    500,
-    { maxWait: 1000 }
+    100,
+    { maxWait: 500 }
   );
   const emitGitDirectoryChanged = _.debounce(
     (repoPath) => {
@@ -190,8 +190,8 @@ exports.registerApi = (env) => {
         logger.info('emitting git-directory-changed to sockets, manually triggered');
       }
     },
-    500,
-    { maxWait: 1000 }
+    100,
+    { maxWait: 500 }
   );
 
   const jsonResultOrFailProm = (res, promise) => {
@@ -351,6 +351,8 @@ exports.registerApi = (env) => {
       );
       await emitGitDirectoryChanged(repoPath);
       await emitWorkingTreeChanged(repoPath);
+      const head = await req.repo.getHead();
+      return head.sha1;
     })
   );
 
@@ -437,13 +439,25 @@ exports.registerApi = (env) => {
   });
 
   app.get(
+    `${exports.pathPrefix}/commits`,
+    ensureAuthenticated,
+    ensurePathExists,
+    jw(async (req) => {
+      let { limit, ids } = req.query;
+      limit = getNumber(limit, config.numberOfNodesPerLoad || 25);
+      ids = typeof ids === 'string' && ids ? ids.split(',') : [];
+      if (!ids.length) return [];
+      const nodes = await req.repo.log(limit, 0, ids);
+      return nodes;
+    })
+  );
+
+  app.get(
     `${exports.pathPrefix}/gitlog`,
     ensureAuthenticated,
     ensurePathExists,
     jw(async (req) => {
       const limit = getNumber(req.query.limit, config.numberOfNodesPerLoad || 25);
-      // TODO if skip is 0, return all references (max 20 most recent) and 100 commits of current + 10 of each reference
-      // TODO ask for more not via skip but via oid
       const skip = getNumber(req.query.skip, 0);
       const nodes = await req.repo.log(limit, skip, config.maxActiveBranchSearchIteration);
       return { skip: skip + nodes.length, nodes, isHeadExist: true };
