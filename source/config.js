@@ -392,16 +392,18 @@ try {
 
 module.exports.ungitPackageVersion = require('../package.json').version;
 
+let devVersion;
 if (fs.existsSync(path.join(__dirname, '..', '.git'))) {
   const revision = child_process
     .execSync('git rev-parse --short HEAD', { cwd: path.join(__dirname, '..') })
     .toString()
     .replace('\n', ' ')
     .trim();
-  module.exports.ungitDevVersion = `dev-${module.exports.ungitPackageVersion}-${revision}`;
+  devVersion = `dev-${module.exports.ungitPackageVersion}-${revision}`;
 } else {
-  module.exports.ungitDevVersion = module.exports.ungitPackageVersion;
+  devVersion = module.exports.ungitPackageVersion;
 }
+module.exports.ungitDevVersion = devVersion;
 
 if (module.exports.alwaysLoadActiveBranch) {
   module.exports.maxActiveBranchSearchIteration = 25;
