@@ -53,6 +53,9 @@ jobs:
       - run: git config --global user.email "test@testy.com"
       - run: git config --global user.name "Test testy"
 
+      # https://github.com/bahmutov/npm-install/issues/103#issuecomment-931226602
+      - run: npm install -g npm
+
       - run: npm ci
       - run: npm run lint
         if: matrix.os == 'ubuntu-latest' && matrix.node-version == '14'
