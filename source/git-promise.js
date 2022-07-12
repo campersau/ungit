@@ -45,9 +45,14 @@ let pLimit = (fn) => {
   }
 };
 // eslint-disable-next-line node/no-unsupported-features/es-syntax
-import('p-limit').then((limit) => {
-  pLimit = limit.default(config.maxConcurrentGitOperations);
-});
+import('p-limit').then(
+  (limit) => {
+    pLimit = limit.default(config.maxConcurrentGitOperations);
+  },
+  () => {
+    /* ignore error when running inside electron */
+  }
+);
 
 const gitExecutorProm = (args, retryCount) => {
   let timeoutTimer;
