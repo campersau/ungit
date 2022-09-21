@@ -8,7 +8,7 @@ const rimraf = require('rimraf');
 const _ = require('lodash');
 const gitPromise = require('./git-promise');
 const fs = require('fs').promises;
-const watch = require('node-watch');
+const chokidar = require('chokidar');
 const ignore = require('ignore');
 const { EventEmitter } = require('events');
 
@@ -64,8 +64,8 @@ exports.registerApi = (env) => {
         logger.debug(`[${this.watcherId}] path does not exist`, item);
         return;
       }
-      const watcher = watch(item, options);
-      watcher.on('change', (_event, changedPath) => {
+      const watcher = chokidar.watch(item, Object.assign({ ignoreInitial: true }, options));
+      watcher.on('all', (_event, changedPath) => {
         logger.silly(`[${this.watcherId}] ${name}`, changedPath);
         this.emit(name, changedPath);
       });
@@ -101,8 +101,7 @@ exports.registerApi = (env) => {
       // Looks like a repo, let's watch workdir
       let gitIgnore = await readIgnore(pathToWatch);
       await watcher.addWorkdir(pathToWatch, {
-        recursive: true,
-        filter: (changedPath, skip) => {
+        ignored: (changedPath) => {
           const filePath = path.relative(pathToWatch, changedPath);
           if (!filePath) return false;
           if (filePath === '.gitignore') {
@@ -112,16 +111,16 @@ exports.registerApi = (env) => {
             );
           }
           // We monitor the repo separately
-          if (filePath === '.git' || filePath.startsWith('.git' + path.sep)) return skip;
+          if (filePath === '.git' || filePath.startsWith('.git' + path.sep)) return true;
           // We add / to test for directories, we can't have a file named like a directory
           // and otherwise directory `foo` won't match ignore `foo/`
           if (gitIgnore.ignores(filePath) || gitIgnore.ignores(`${filePath}/`)) {
             // TODO https://github.com/kaelzhang/node-ignore/issues/78
             // optimization: assume these are permanent skips
-            if (filePath.includes('node_modules')) return skip;
-            return false;
+            if (filePath.includes('node_modules')) return true;
+            return true;
           }
-          return true;
+          return false;
         },
       });
     } else {
@@ -130,8 +129,7 @@ exports.registerApi = (env) => {
     }
     // Here we watch the git state
     await watcher.addGit(path.join(repoPath, 'refs'), {
-      recursive: true,
-      filter: (f) => !f.endsWith('.lock'),
+      ignored: (f) => f.endsWith('.lock'),
     });
     await watcher.addGit(path.join(repoPath, 'HEAD'));
     await watcher.addGit(path.join(repoPath, 'index'));
