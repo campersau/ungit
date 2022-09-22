@@ -10,7 +10,7 @@ on:
 
 jobs:
   bump:
-    if: github.repository == 'FredrikNoren/ungit'
+#    if: github.repository == 'FredrikNoren/ungit'
     runs-on: ubuntu-latest
 
     steps:
@@ -33,7 +33,7 @@ jobs:
       - run: npm install
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
+        uses: campersau/create-pull-request@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
