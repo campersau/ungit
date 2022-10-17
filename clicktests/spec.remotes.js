@@ -40,7 +40,7 @@ describe('[REMOTES]', () => {
 
     await environment.insert('.modal #Name', 'myremote');
     await environment.insert('.modal #Url', testRepoPaths[0]);
-    await environment.awaitAndClick('.modal .modal-footer .btn-primary');
+    await environment.click('.modal .modal-footer .btn-primary');
     await environment.ensureRedraw();
     await environment.click('.fetchButton .dropdown-toggle');
     await environment.waitForElementVisible(
@@ -57,7 +57,7 @@ describe('[REMOTES]', () => {
   it('Remote delete check', async () => {
     await environment.click('.fetchButton .dropdown-toggle');
     await environment.click('[data-ta-clickable="myremote-remove"]');
-    await environment.awaitAndClick('.modal-dialog .btn-primary');
+    await environment.click('.modal-dialog .btn-primary');
     await environment.ensureRedraw();
     await environment.click('.fetchButton .dropdown-toggle');
     await environment.waitForElementHidden('[data-ta-clickable="myremote"]');
@@ -76,7 +76,6 @@ describe('[REMOTES]', () => {
     await environment.insert('#cloneToInput', testRepoPaths[2]);
     await environment.click('.uninited button[type="submit"]');
     await environment.waitForElementVisible('.repository-view');
-    await environment.wait(1000); // ensure click bindings are initialized
   });
 
   it('Should be possible to fetch', async () => {
@@ -119,7 +118,6 @@ describe('[REMOTES]', () => {
     await environment.createTestFile(`${testRepoPaths[2]}/commitnpush.txt`, testRepoPaths[2]);
     await environment.waitForElementVisible('.files .file .btn-default');
     await environment.insert('.staging input.form-control', 'Commit & Push');
-    await environment.wait(250);
     await environment.click('.commit-grp .dropdown-toggle');
     await environment.click('.commitnpush');
     await environment.waitForElementVisible(
@@ -132,7 +130,7 @@ describe('[REMOTES]', () => {
     await environment.insert('.staging input.form-control', 'Commit & Push with ff');
     await environment.click('.commit-grp .dropdown-toggle');
     await environment.click('.commitnpush');
-    await environment.awaitAndClick('.modal-dialog .btn-primary');
+    await environment.click('.modal-dialog .btn-primary');
     await environment.waitForElementVisible(
       '[data-ta-node-title="Commit & Push with ff"] .commit-container'
     );

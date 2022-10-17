@@ -36,8 +36,7 @@ describe('[BRANCHES]', () => {
   });
 
   it('search for the hidden branch', async () => {
-    await environment.awaitAndClick('.showSearchForm');
-    await environment.wait(500);
+    await environment.click('.showSearchForm');
     await environment.type('-4');
     await environment.waitForElementVisible('.branch-search');
     await environment.page.waitForFunction(
@@ -150,7 +149,7 @@ describe('[BRANCHES]', () => {
     const branchDeleteResponse = environment.setApiListener('/branches?', 'DELETE');
     await environment.click('.branch .dropdown-toggle');
     await environment.click('[data-ta-clickable="refs/heads/branch-3-remove"]');
-    await environment.awaitAndClick('.modal-dialog .btn-primary');
+    await environment.click('.modal-dialog .btn-primary');
     await branchDeleteResponse;
   });
 
@@ -170,13 +169,12 @@ describe('[BRANCHES]', () => {
   });
 
   it('cherrypick abort case', async () => {
-    await environment.wait(1000);
     await environment.clickOnNode('[data-ta-clickable="node-clickable-0"]');
-    await environment.awaitAndClick(
+    await environment.click(
       '[data-ta-action="cherry-pick"]:not([style*="display: none"]) .dropmask'
     );
     await environment.click('.staging .btn-stg-abort');
-    await environment.awaitAndClick('.modal-dialog .btn-primary', 2000);
+    await environment.click('.modal-dialog .btn-primary');
     const gitlogResponse = environment.setApiListener('/gitlog', 'GET', (body) => {
       return _.isEqual(
         body.nodes.map((node) => node.message),
@@ -206,13 +204,12 @@ describe('[BRANCHES]', () => {
   });
 
   it('test backward squash from own lineage', async () => {
-    await environment.wait(1000);
     await environment.waitForBranch('branch-1');
     await environment.clickOnNode('.ref.branch.current');
     await environment.click('[data-ta-node-title="commit-1"] .squash .dropmask');
     await environment.waitForElementVisible('.staging .files .file');
     await environment.click('.files button.discard');
-    await environment.awaitAndClick('.modal-dialog .btn-primary', 2000);
+    await environment.click('.modal-dialog .btn-primary');
     await environment.ensureRedraw();
     await environment.waitForElementHidden('.staging .files .file');
   });

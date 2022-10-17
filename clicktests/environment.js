@@ -235,9 +235,6 @@ class Environment {
     logger.debug(`Waiting for hidden: "${selector}"`);
     return this.page.waitForSelector(selector, { hidden: true, timeout: timeout || 6000 });
   }
-  wait(duration) {
-    return this.page.waitForTimeout(duration);
-  }
 
   type(text) {
     return this.page.keyboard.type(text);
@@ -258,7 +255,6 @@ class Environment {
     for (let i = 0; i < 3; i++) {
       try {
         const toClick = await this.waitForElementVisible(selector);
-        await this.wait(200);
         await toClick.click({ delay: 100, clickCount: clickCount });
         break;
       } catch (err) {
@@ -288,7 +284,6 @@ class Environment {
   async _createRef(type, name) {
     await this.click('.current ~ .new-ref button.showBranchingForm');
     await this.insert('.ref-icons.new-ref.editing input', name);
-    await this.wait(500);
     const createRefProm =
       type === 'branch'
         ? this.setApiListener('/branches', 'POST')
@@ -311,7 +306,7 @@ class Environment {
         visible: true,
         timeout: 2000,
       }); // not all ref actions opens dialog, this line may throw exception.
-      await this.awaitAndClick('.modal-dialog .btn-primary');
+      await this.click('.modal-dialog .btn-primary');
     } catch (err) {
       /* ignore */
     }
@@ -320,26 +315,17 @@ class Environment {
   }
 
   async _refAction(ref, local, action, validateFunc) {
-    if (!this[`_${action}ResponseWatcher`]) {
-      this.page.on('response', async (response) => {
-        const url = response.url();
-        const method = response.request().method();
-
-        if (validateFunc(url, method)) {
-          this.page.evaluate(`ungit._${action}Response = true`);
-        }
-      });
-      this[`_${action}ResponseWatcher`] = true;
-    }
+    const refActionResponseProm = this.page.waitForResponse((response) => {
+      return validateFunc(response.url(), response.request().method());
+    });
     await this.clickOnNode(`.branch[data-ta-name="${ref}"][data-ta-local="${local}"]`);
     await this.click(`[data-ta-action="${action}"]:not([style*="display: none"]) .dropmask`);
     await this._verifyRefAction(action);
-    await this.page.waitForFunction(`ungit._${action}Response`, { polling: 250 });
-    await this.page.evaluate(`ungit._${action}Response = undefined`);
+    await refActionResponseProm;
   }
 
-  async pushRefAction(ref, local) {
-    await this._refAction(ref, local, 'push', (url, method) => {
+  pushRefAction(ref, local) {
+    return this._refAction(ref, local, 'push', (url, method) => {
       if (method !== 'POST') {
         return false;
       }
@@ -354,43 +340,39 @@ class Environment {
     });
   }
 
-  async rebaseRefAction(ref, local) {
-    await this._refAction(ref, local, 'rebase', (url, method) => {
+  rebaseRefAction(ref, local) {
+    return this._refAction(ref, local, 'rebase', (url, method) => {
       return method === 'POST' && url.indexOf('/rebase') >= -1;
     });
   }
 
-  async mergeRefAction(ref, local) {
-    await this._refAction(ref, local, 'merge', (url, method) => {
+  mergeRefAction(ref, local) {
+    return this._refAction(ref, local, 'merge', (url, method) => {
       return method === 'POST' && url.indexOf('/merge') >= -1;
     });
   }
 
   async moveRef(ref, targetNodeCommitTitle) {
+    const moveRefResponseProm = this.page.waitForResponse((response) => {
+      const url = response.url();
+      if (response.request().method() !== 'POST') {
+        return false;
+      }
+      if (
+        url.indexOf('/reset') === -1 &&
+        url.indexOf('/tags') === -1 &&
+        url.indexOf('/branches') === -1
+      ) {
+        return false;
+      }
+      return true;
+    });
     await this.clickOnNode(`.branch[data-ta-name="${ref}"]`);
-    if (!this._isMoveResponseWatcherSet) {
-      this.page.on('response', async (response) => {
-        const url = response.url();
-        if (response.request().method() !== 'POST') {
-          return;
-        }
-        if (
-          url.indexOf('/reset') === -1 &&
-          url.indexOf('/tags') === -1 &&
-          url.indexOf('/branches') === -1
-        ) {
-          return;
-        }
-        this.page.evaluate('ungit._moveEventResponded = true');
-      });
-      this._isMoveResponseWatcherSet = true;
-    }
     await this.click(
       `[data-ta-node-title="${targetNodeCommitTitle}"] [data-ta-action="move"]:not([style*="display: none"]) .dropmask`
     );
     await this._verifyRefAction('move');
-    await this.page.waitForFunction('ungit._moveEventResponded', { polling: 250 });
-    await this.page.evaluate('ungit._moveEventResponded = undefined');
+    await moveRefResponseProm;
   }
 
   // Explicitly trigger two program events.
@@ -411,17 +393,11 @@ class Environment {
 
   async ensureRedraw() {
     logger.debug('ensureRedraw triggered');
-    if (!this._gitlogResposneWatcher) {
-      this.page.on('response', async (response) => {
-        if (response.url().indexOf('/gitlog') > 0 && response.request().method() === 'GET') {
-          this.page.evaluate('ungit._gitlogResponse = true');
-        }
-      });
-      this._gitlogResposneWatcher = true;
-    }
-    await this.page.evaluate('ungit._gitlogResponse = undefined');
+    const ensureRedrawResponseProm = this.page.waitForResponse((response) => {
+      return response.url().indexOf('/gitlog') > 0 && response.request().method() === 'GET';
+    });
     await this.triggerProgramEvents();
-    await this.page.waitForFunction('ungit._gitlogResponse', { polling: 250 });
+    await ensureRedrawResponseProm;
     await this.page.waitForFunction(
       'ungit.__app.content().repository().graph._isLoadNodesFromApiRunning === false',
       { polling: 250 }
@@ -429,14 +405,9 @@ class Environment {
     logger.debug('ensureRedraw finished');
   }
 
-  async awaitAndClick(selector, time = 1000) {
-    await this.wait(time);
-    await this.click(selector);
-  }
-
   // After a click on `git-node` or `git-ref`, ensure `currentActionContext` is set
   async clickOnNode(nodeSelector) {
-    await this.awaitAndClick(nodeSelector);
+    await this.click(nodeSelector);
     await this.page.waitForFunction(
       () => {
         const app = ungit.__app;
@@ -465,21 +436,13 @@ class Environment {
   // If an api call matches `apiPart` and `method` is called, set the `globalVarName`
   // to true. Use for detect if an API call was made and responded.
   setApiListener(apiPart, method, bodyMatcher = () => true) {
-    const randomVariable = `ungit._${Math.floor(Math.random() * 500000)}`;
-    this.page.on(
-      'response',
-      async (response) => {
-        if (response.url().indexOf(apiPart) > -1 && response.request().method() === method) {
-          if (bodyMatcher(await response.json())) {
-            // reponse body matcher is matched, set the value to true
-            this.page.evaluate(`${randomVariable} = true`);
-          }
+    return this.page.waitForResponse(async (response) => {
+      if (response.url().indexOf(apiPart) > -1 && response.request().method() === method) {
+        if (bodyMatcher(await response.json())) {
+          return true;
         }
-      },
-      { polling: 250 }
-    );
-    return this.page
-      .waitForFunction(`${randomVariable} === true`, { polling: 250 })
-      .then(() => this.page.evaluate(`${randomVariable} = undefined`));
+      }
+      return false;
+    });
   }
 }

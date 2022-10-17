@@ -22,7 +22,7 @@ describe('[SUMBODULES]', () => {
 
     await environment.insert('.modal #Path', 'subrepo');
     await environment.insert('.modal #Url', testRepoPaths[0]);
-    await environment.awaitAndClick('.modal-dialog .btn-primary');
+    await environment.click('.modal-dialog .btn-primary');
     await environment.ensureRedraw();
   });
 
@@ -32,7 +32,7 @@ describe('[SUMBODULES]', () => {
       '.fetchButton .dropdown-menu [data-ta-clickable="subrepo"]'
     );
     const submoduleResponseProm = environment.setApiListener('/submodules/update', 'POST');
-    await environment.awaitAndClick('.fetchButton .update-submodule');
+    await environment.click('.fetchButton .update-submodule');
     await submoduleResponseProm;
   });
 
@@ -40,7 +40,7 @@ describe('[SUMBODULES]', () => {
     const submoduleDeleteResponseProm = environment.setApiListener('/submodules?', 'DELETE');
     await environment.click('.submodule .dropdown-toggle');
     await environment.click('[data-ta-clickable="subrepo-remove"]');
-    await environment.awaitAndClick('.modal-dialog .btn-primary');
+    await environment.click('.modal-dialog .btn-primary');
     await submoduleDeleteResponseProm;
   });
 });
