@@ -59,16 +59,15 @@ describe('git-api conflict rebase', function () {
     });
   });
 
-  it('should be possible to rebase on master', (done) => {
-    req
+  it('should be possible to rebase on master', () => {
+    return req
       .post(`${restGit.pathPrefix}/rebase`)
       .send({ path: testDir, onto: 'master' })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(400)
-      .end((err, res) => {
+      .then((res) => {
         expect(res.body.errorCode).to.be('merge-failed');
-        done();
       });
   });
 
@@ -141,16 +140,15 @@ describe('git-api conflict checkout', function () {
     return common.post(req, '/testing/changefile', { file: path.join(testDir, testFile1) });
   });
 
-  it('should be possible to checkout with local files that will conflict', (done) => {
-    req
+  it('should be possible to checkout with local files that will conflict', () => {
+    return req
       .post(`${restGit.pathPrefix}/checkout`)
       .send({ path: testDir, name: testBranch })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(400)
-      .end((err, res) => {
+      .then((res) => {
         expect(res.body.errorCode).to.be('merge-failed');
-        done();
       });
   });
 
@@ -218,16 +216,15 @@ describe('git-api conflict merge', function () {
     });
   });
 
-  it('should be possible to merge the branches', (done) => {
-    req
+  it('should be possible to merge the branches', () => {
+    return req
       .post(`${restGit.pathPrefix}/merge`)
       .send({ path: testDir, with: 'master' })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(400)
-      .end((err, res) => {
+      .then((res) => {
         expect(res.body.errorCode).to.be('merge-failed');
-        done();
       });
   });
 
@@ -328,16 +325,15 @@ describe('git-api conflict solve by deleting', function () {
     });
   });
 
-  it('should be possible to rebase on master', (done) => {
-    req
+  it('should be possible to rebase on master', () => {
+    return req
       .post(`${restGit.pathPrefix}/rebase`)
       .send({ path: testDir, onto: 'master' })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(400)
-      .end((err, res) => {
+      .then((res) => {
         expect(res.body.errorCode).to.be('merge-failed');
-        done();
       });
   });
 

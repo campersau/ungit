@@ -47,16 +47,15 @@ describe('git-api', () => {
     });
   });
 
-  it('status should fail in uninited directory', (done) => {
-    req
+  it('status should fail in uninited directory', () => {
+    return req
       .get(`${restGit.pathPrefix}/status`)
       .query({ path: path.join(testDir, 'nowhere') })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
       .expect(400)
-      .end((err, res) => {
+      .then((res) => {
         expect(res.body.errorCode).to.be('no-such-path');
-        done();
       });
   });
 
@@ -125,14 +124,13 @@ describe('git-api', () => {
       .then((res) => expect(res).to.eql({ type: 'inited', gitRootPath: testDir }));
   });
 
-  it("commit should fail on when there's no files to commit", (done) => {
-    req
+  it("commit should fail on when there's no files to commit", () => {
+    return req
       .post(`${restGit.pathPrefix}/commit`)
       .send({ path: testDir, message: 'test', files: [] })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
-      .expect(400)
-      .end(done);
+      .expect(400);
   });
 
   // testFile
@@ -151,14 +149,13 @@ describe('git-api', () => {
     });
   });
 
-  it('commit should fail on non-existing file', (done) => {
-    req
+  it('commit should fail on non-existing file', () => {
+    return req
       .post(`${restGit.pathPrefix}/commit`)
       .send({ path: testDir, message: 'test', files: [{ name: testFile }] })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
-      .expect(400)
-      .end(done);
+      .expect(400);
   });
 
   it('creating test file should work', () => {
@@ -186,14 +183,13 @@ describe('git-api', () => {
 
   // commitMessage
 
-  it('commit should fail without commit message', (done) => {
-    req
+  it('commit should fail without commit message', () => {
+    return req
       .post(`${restGit.pathPrefix}/commit`)
       .send({ path: testDir, message: undefined, files: [{ name: testFile }] })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
-      .expect(400)
-      .end(done);
+      .expect(400);
   });
 
   it("commit should succeed when there's files to commit", () => {
@@ -295,14 +291,13 @@ describe('git-api', () => {
     });
   });
 
-  it('discarding the new file should work', (done) => {
-    req
+  it('discarding the new file should work', () => {
+    return req
       .post(`${restGit.pathPrefix}/discardchanges`)
       .send({ path: testDir, file: testFile2 })
       .set('Accept', 'application/json')
       .expect('Content-Type', /json/)
-      .expect(200)
-      .end(done);
+      .expect(200);
   });
 
   // testSubDir
@@ -443,14 +438,13 @@ describe('git-api', () => {
     });
   });
 
-  it('get the baserepopath without base repo should work', (done) => {
+  it('get the baserepopath without base repo should work', () => {
     const baseRepoPathTestDir = path.join(testDir, 'depth1', 'depth2');
 
-    mkdirp(baseRepoPathTestDir).then(() => {
+    return mkdirp(baseRepoPathTestDir).then(() => {
       return common.get(req, '/baserepopath', { path: baseRepoPathTestDir }).then((res) => {
         // Some oses uses symlink and path will be different as git will return resolved symlink
         expect(res.path).to.contain(testDir);
-        done();
       });
     });
   });
